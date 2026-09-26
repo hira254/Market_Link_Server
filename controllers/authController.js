@@ -3,60 +3,40 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
 
-const register = async (req, res) => {
+const registerUser = async (req, res) => {
   try {
-    const {
-      name,
-      email,
-      password,
-      phone,
-      address,
-      stallName,
-      role,
-    } = req.body;
+    const { name, email, password, phone, address, role } = req.body;
 
-    // Customer + Farmer common fields
-    if (!name || !email || !password) {
-      return res.status(400).json({
-        message: "Name, email and password are required",
-      });
+   if (!name || !email || !password) {
+  return res.status(400).json({
+    message: "Name, email and password are required",
+  });
     }
 
-    // Farmer-specific fields
-    if (role === "farmer") {
-      if (!stallName || !phone || !address) {
-        return res.status(400).json({
-          message:
-            "Farmers must provide stall name, contact number and address",
-        });
-      }
-    }
-
-    // Check existing user
+   
     const existingUser = await User.findOne({ email });
 
     if (existingUser) {
       return res.status(400).json({
-        message: "User already exists",
+        message: "Email already registered",
       });
     }
 
-    // Hash password
+   
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // CREATE USER 👇
+    
     const user = await User.create({
       name,
       email,
       password: hashedPassword,
-      phone: phone || "",
-      address: address || "",
-      stallName: stallName || "",
+      phone,
+      address,
       role: role || "customer",
     });
 
-    return res.status(201).json({
-      message: "Registration successful",
+    res.status(201).json({
+      message: "User registered successfully",
       user: {
         id: user._id,
         name: user.name,
@@ -64,11 +44,8 @@ const register = async (req, res) => {
         role: user.role,
       },
     });
-
   } catch (error) {
-    console.error("REGISTER ERROR:", error);
-
-    return res.status(500).json({
+    res.status(500).json({
       message: "Registration failed",
       error: error.message,
     });

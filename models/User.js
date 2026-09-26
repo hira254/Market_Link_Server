@@ -32,10 +32,7 @@ var userSchema = new mongoose.Schema({
   
       trim: true,
     },
-stallName: {
-  type: String,
-  default: ""
-},
+
     role: {
       type: String,
       enum: ["customer", "farmer", "admin"],
