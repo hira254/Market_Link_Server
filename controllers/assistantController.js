@@ -16,15 +16,12 @@ const chatWithAssistant = async (req, res) => {
       });
     }
 
-    // Get products
     const products = await Product.find()
       .populate("farmer")
       .lean();
 
-    // Get markets
     const markets = await Market.find().lean();
 
-    // Get farmers
     const farmers = await FarmerProfile.find().lean();
 
     const answer = await generateAssistantResponse({
