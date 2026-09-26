@@ -48,6 +48,14 @@ app.get(
     });
   }
 );
+app.get("/health", (req, res) => {
+  console.log("Hello MarketLink - Server APIs are working perfectly");
+
+  res.status(200).json({
+    success: true,
+    message: "MarketLink Server APIs are working perfectly",
+  });
+});
 app.use("/api/farmers", farmerRoutes);
 app.use("/api/markets", marketRoutes);
 app.use("/api/products", productRoutes);
