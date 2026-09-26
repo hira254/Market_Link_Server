@@ -19,7 +19,6 @@ const chatWithAssistant = async (req, res) => {
     // Get products
     const products = await Product.find()
       .populate("farmer")
-      .populate("market")
       .lean();
 
     // Get markets
