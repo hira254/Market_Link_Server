@@ -1,61 +1,52 @@
-const { GoogleGenAI } = require("@google/genai");
+const Product = require("../models/Product");
+const Market = require("../models/Market");
+const FarmerProfile = require("../models/FarmerProfile");
 
-const generateAssistantResponse = async ({
-  question,
-  products = [],
-  farmers = [],
-  markets = [],
-}) => {
-  if (!process.env.GEMINI_API_KEY) {
-    throw new Error("GEMINI_API_KEY is missing");
+const {
+  generateAssistantResponse,
+} = require("../services/assistantService");
+
+const chatWithAssistant = async (req, res) => {
+  try {
+    const { question } = req.body;
+
+    if (!question || !question.trim()) {
+      return res.status(400).json({
+        message: "Question is required",
+      });
+    }
+
+    const products = await Product.find()
+      .populate("farmer")
+      .lean();
+
+    const markets = await Market.find().lean();
+
+    const farmers = await FarmerProfile.find().lean();
+
+    const answer = await generateAssistantResponse({
+      question: question.trim(),
+      products,
+      farmers,
+      markets,
+    });
+
+    return res.status(200).json({
+      success: true,
+      question,
+      answer,
+    });
+  } catch (error) {
+    console.error("AI ASSISTANT ERROR:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "AI Assistant failed",
+      error: error.message,
+    });
   }
-
-  const ai = new GoogleGenAI({
-    apiKey: process.env.GEMINI_API_KEY,
-  });
-
-  const context = `
-You are the MarketLink AI Assistant.
-
-MarketLink is a farmers marketplace where customers can find
-products, farmers and markets.
-
-Help customers with:
-- Finding specific products
-- Finding farmers
-- Market timings
-- Farmer availability
-- Pickup windows
-- Product details and prices
-
-IMPORTANT RULES:
-- Answer ONLY using the MarketLink data provided.
-- Never invent products, farmers, markets, prices or timings.
-- If information is unavailable, say:
-  "I couldn't find that information in MarketLink."
-- Keep answers short, friendly and useful.
-
-MARKETS:
-${JSON.stringify(markets, null, 2)}
-
-FARMERS:
-${JSON.stringify(farmers, null, 2)}
-
-PRODUCTS:
-${JSON.stringify(products, null, 2)}
-
-CUSTOMER QUESTION:
-${question}
-`;
-
-  const response = await ai.models.generateContent({
-    model: "gemini-2.0-flash", // Updated model identifier
-    contents: context,
-  });
-
-  return response.text;
 };
 
 module.exports = {
-  generateAssistantResponse,
+  chatWithAssistant,
 };
